@@ -11,10 +11,12 @@ repositories {
 }
 
 dependencies {
-    compile 'log4j:log4j:1.2.8'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'oro:oro:2.0.7'
-    compile 'junit:junit:3.8.1'
     compile 'commons-httpclient:commons-httpclient:2.0'
+
+    testImplementation 'junit:junit:3.8.1'
 }
 
 publishing {

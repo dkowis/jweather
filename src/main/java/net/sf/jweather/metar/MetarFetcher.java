@@ -22,12 +22,13 @@ package net.sf.jweather.metar;
 
 import java.io.*;
 import java.net.*;
-import org.apache.log4j.Logger;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.HttpRecoverableException;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Responsible for downloading the METAR reports 
@@ -43,18 +44,13 @@ import org.apache.commons.httpclient.methods.GetMethod;
  * @see <a href="Metar.html">Metar</a>
  */
 public class MetarFetcher {
-	private static Logger log = null;
+	private static Logger log = LoggerFactory.getLogger(MetarFetcher.class);
 	private static String metarData = null;
 
 	final static String httpMetarURL = "http://weather.noaa.gov/pub/data/observations/metar/stations/";
 	//final static String httpMetarHostname =  "weather.noaa.gov";
 	//final static int    httpMetarPort     =  80;
 	//final static String httpMetarPath     = "/pub/data/observations/metar/stations/";
-
-	static {
-    	log = Logger.getLogger("net.sf.jweather");
-		log.debug("MetarFetcher: instantiated");
-	}
 
 	public static String fetch(String station) {
 		return fetch(station, 0);

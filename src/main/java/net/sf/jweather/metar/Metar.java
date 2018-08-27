@@ -23,7 +23,9 @@ package net.sf.jweather.metar;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.Iterator;
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Responsible for storing METAR data and providing methods for accessing
@@ -37,7 +39,7 @@ import org.apache.log4j.Logger;
  * @see <a href="WeatherCondition.html">WeatherCondition</a>
  */
 public class Metar {
-	Logger log;
+	private Logger log = LoggerFactory.getLogger(Metar.class);
 
   String reportString = null;
 	String dateString = "";
@@ -66,11 +68,6 @@ public class Metar {
 	ArrayList obscurations = new ArrayList();
 	private boolean isNoSignificantChange = false;
   private String becoming = null;
-
-	public Metar() {
-    	log = Logger.getLogger("net.sf.jweather");
-		log.debug("Metar: instantiated");
-	}
 
     /**
      *

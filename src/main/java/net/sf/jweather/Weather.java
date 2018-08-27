@@ -20,10 +20,11 @@ For more information, please email arimus@users.sourceforge.net
 */
 package net.sf.jweather;
 
-import java.io.*;
-import java.net.*;
-import org.apache.log4j.Logger;
-import net.sf.jweather.metar.*;
+import net.sf.jweather.metar.Metar;
+import net.sf.jweather.metar.MetarFetcher;
+import net.sf.jweather.metar.MetarParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Responsible for downloading the METAR reports and feeding them to the Metar
@@ -42,35 +43,29 @@ import net.sf.jweather.metar.*;
  * @see <a href="Metar.html">Metar</a>
  */
 public class Weather {
-	private static Logger log = null;
+    private static final Logger log = LoggerFactory.getLogger(Weather.class);
 
-	final static String httpMetarURL = "http://weather.noaa.gov/pub/data/observations/metar/stations/";
-	//final static String httpMetarHostname =  "weather.noaa.gov";
-	//final static int    httpMetarPort     =  80;
-	//final static String httpMetarPath     = "/pub/data/observations/metar/stations/";
+    static {
+        log.debug("Weather: instantiated");
+    }
 
-	static {
-    	log = Logger.getLogger("net.sf.jweather");
-		log.debug("Weather: instantiated");
-	}
+    public static Metar getMetar(String station) {
+        return getMetar(station, 0);
+    }
 
-	public static Metar getMetar(String station) {
-		return getMetar(station, 0);
-	}
+    public static Metar getMetar(String station, int timeout) {
+        String metarData = MetarFetcher.fetch(station, timeout);
+        Metar metar = null;
 
-	public static Metar getMetar(String station, int timeout) {
-		String metarData = MetarFetcher.fetch(station, timeout);
-		Metar metar = null;
+        if (metarData != null) {
+            try {
+                metar = MetarParser.parse(metarData);
+            } catch (Exception e) {
+                System.err.println("Weather: " + e);
+                e.printStackTrace(System.err);
+            }
+        }
 
-		if (metarData != null) {
-			try {
-				metar = MetarParser.parse(metarData);
-			} catch (Exception e) {
-				System.err.println("Weather: "+e);
-				e.printStackTrace(System.err);
-			}
-		}
-
-		return metar;
-	}
+        return metar;
+    }
 }

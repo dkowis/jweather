@@ -20,18 +20,20 @@
  */
 package net.sf.jweather.metar;
 
+import org.apache.oro.text.perl.MalformedPerl5PatternException;
+import org.apache.oro.text.perl.Perl5Util;
+import org.apache.oro.text.regex.MalformedPatternException;
+import org.apache.oro.text.regex.Perl5Compiler;
+import org.apache.oro.text.regex.Perl5Matcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.ArrayList;
-import org.apache.oro.text.regex.Perl5Matcher;
-import org.apache.oro.text.regex.Perl5Compiler;
-import org.apache.oro.text.regex.MalformedPatternException;
-import org.apache.oro.text.perl.MalformedPerl5PatternException;
-import org.apache.oro.text.perl.Perl5Util;
-import org.apache.log4j.Logger;
 
 /*
  * examples:
@@ -90,7 +92,7 @@ import org.apache.log4j.Logger;
 /**
  * Responsible for parsing raw METAR data and providing methods for accessing
  * the data
- * 
+ *
  * @author David Castro, dcastro@apu.edu
  * @version $Revision: 1.18 $
  * @see <a href="Weather.html">Weather </a>
@@ -100,7 +102,7 @@ import org.apache.log4j.Logger;
  * @see <a href="WeatherCondition.html">WeatherCondition </a>
  */
 public class MetarParser {
-    private static Logger log = Logger.getLogger("net.sf.jweather.MetarParser");
+    private static Logger log = LoggerFactory.getLogger(MetarParser.class);
 
     private static Perl5Util utility = new Perl5Util();
 
@@ -117,15 +119,13 @@ public class MetarParser {
 
     /**
      * Kept for backwards compatibility.
-     * 
-     * @param metarData
-     *            The date string / metar report lines to parse
+     *
+     * @param metarData The date string / metar report lines to parse
      * @return The Metar representing this report
-     * @throws MetarParseException
-     *             Error parsing the report
-     * @deprecated MetarParser.parse(String) deprecated, please use
-     *             MetarParser.parseRecord(String metarData)
+     * @throws MetarParseException Error parsing the report
      * @see MetarParser.parseRecord(String metarData)
+     * @deprecated MetarParser.parse(String) deprecated, please use
+     * MetarParser.parseRecord(String metarData)
      */
     public static Metar parse(String metarData) throws MetarParseException {
         return MetarParser.parseRecord(metarData);
@@ -136,25 +136,24 @@ public class MetarParser {
      * file. This method accepts the two values in a single string separated by
      * a newline. This might be called if parsing the METAR source file using an
      * empty line as a delimiter.
-     * 
+     * <p>
      * Example:
-     * 
+     * <p>
      * 2003/10/29 02:45 <-- Date String KUVA 290245Z AUTO 14003KT 7SM CLR 14/06
      * A2984 RMK AO2 <-- Metar report
-     * 
+     * <p>
      * NOTE: The report date/time provided in the resulting object will be
      * created using the following: 1) The day and time will be retrieved from
      * the DDHHMMZ string. 2) If the dayOfMonth is greater than the current
      * dayOfMonth - We'll assume the report was from last month and roll back to
      * last month. If this involves rolling the year, we'll also do that. 3)
      * Otherwise Year and Month will be current.
-     * 
+     * <p>
      * passed in the 'dateString' arg will be used to determine the year and
      * month of this report. The day and time will be retreived from the the
      * actual report string. Ex: 290245Z above will be 0245GMT on 29 Oct 2003
-     * 
-     * @param metarData
-     *            The string containing both the date and the report.
+     *
+     * @param metarData The string containing both the date and the report.
      * @return The Metar object describing the report
      */
     public static Metar parseRecord(String metarData)
@@ -174,16 +173,12 @@ public class MetarParser {
     /**
      * Parse the record date string that is found on the line above the Metar
      * record in the standardd NOAA Metar data file.
-     * 
-     * 
-     * @param dateString
-     *            The record date string
+     *
+     * @param dateString The record date string
      * @return The Date object representing the source date string
-     * @throws ParseException
-     *             Error parsing the date
-     * @throws MetarParseException
-     *             A necessary component of the metar record was not parsed
-     *             correctly
+     * @throws ParseException      Error parsing the date
+     * @throws MetarParseException A necessary component of the metar record was not parsed
+     *                             correctly
      */
     public static Date parseRecordDateString(String dateString)
             throws MetarParseException {
@@ -199,23 +194,20 @@ public class MetarParser {
     /**
      * Parse both the date string and metar report as extracted from a METAR
      * file. Example:
-     * 
+     * <p>
      * 2003/10/29 02:45 <-- Date String KUVA 290245Z AUTO 14003KT 7SM CLR 14/06
      * A2984 RMK AO2 <-- Metar report
-     * 
+     * <p>
      * NOTE: The date passed in the 'dateString' arg will be used to determine
      * the year and month of this report. The day and time will be retreived
      * from the the actual report string. Ex: 290245Z above will be 0245GMT on
      * 29 Oct 2003
-     * 
-     * @param dateString
-     *            The date string as found above each metar report in the NOAA
-     *            METAR file.
-     * @param metarString
-     *            The metar report as found in the NOAA METAR file.
+     *
+     * @param dateString  The date string as found above each metar report in the NOAA
+     *                    METAR file.
+     * @param metarString The metar report as found in the NOAA METAR file.
      * @return The Metar object describing the report
-     * @throws MetarParseException
-     *             Unable to parse report
+     * @throws MetarParseException Unable to parse report
      */
     public static Metar parseReport(String dateString, String metarString)
             throws MetarParseException {
@@ -229,26 +221,24 @@ public class MetarParser {
     /**
      * Parse metar report (no DateString line parsed) as extracted from a METAR
      * file. Example:
-     * 
+     * <p>
      * KUVA 290245Z AUTO 14003KT 7SM CLR 14/06 A2984 RMK AO2 <-- Metar report
-     * 
+     * <p>
      * NOTE: The report date/time provided in the resulting object will be
      * created using the following: 1) The day and time will be retrieved from
      * the DDHHMMZ string. 2) If the dayOfMonth is greater than the current
      * dayOfMonth - We'll assume the report was from last month and roll back to
      * last month. If this involves rolling the year, we'll also do that. 3)
      * Otherwise Year and Month will be current.
-     * 
+     * <p>
      * NOTE: If you later provide a date string to the Metar using setDate(),
      * then that value will overwrite the value parsed here.
-     * 
-     * @param metarString
-     *            A standard NOAA Metar report. This should be a single line of
-     *            data. It should not include the record date as found one line
-     *            above the metar report in the data file.
+     *
+     * @param metarString A standard NOAA Metar report. This should be a single line of
+     *                    data. It should not include the record date as found one line
+     *                    above the metar report in the data file.
      * @return The Metar object describing the report
-     * @throws MetarParseException
-     *             Unable to parse report
+     * @throws MetarParseException Unable to parse report
      */
     public static Metar parseReport(String metarString)
             throws MetarParseException {
@@ -364,7 +354,7 @@ public class MetarParser {
             if (((String) tokens.get(index))
                     .equals(MetarConstants.METAR_AUTOMATED)
                     || ((String) tokens.get(index))
-                            .equals(MetarConstants.METAR_CORRECTED)) {
+                    .equals(MetarConstants.METAR_CORRECTED)) {
                 metar.setReportModifier((String) tokens.get(index));
                 // on to the next token
                 if (index < numTokens - 1) {
@@ -392,7 +382,7 @@ public class MetarParser {
 
             temp = (String) tokens.get(index);
             if (temp.endsWith("KT") || temp.endsWith("KTS") ||
-                temp.endsWith("MPS") || temp.startsWith("VRB")) {
+                    temp.endsWith("MPS") || temp.startsWith("VRB")) {
                 int pos = 0;
                 boolean windInKnots = false;
 
@@ -400,8 +390,8 @@ public class MetarParser {
                 // and did not end with KT. This seems to only happen in the
                 // US, so assuming knots.
                 if (temp.endsWith("KT") ||
-                    temp.endsWith("KTS") ||
-                    (temp.startsWith("VRB") && !temp.endsWith("MPS"))) {
+                        temp.endsWith("KTS") ||
+                        (temp.startsWith("VRB") && !temp.endsWith("MPS"))) {
                     log.debug("MetarParser: wind speed in knots");
                     windInKnots = true;
                 } else {
@@ -422,9 +412,9 @@ public class MetarParser {
 
                 // Three digit wind only if not variable and has digit in 
                 // 5th position
-                if(!metar.getWindDirectionIsVariable() &&
-                   temp.length() >= 6 &&
-                   Character.isDigit(temp.charAt(5))){
+                if (!metar.getWindDirectionIsVariable() &&
+                        temp.length() >= 6 &&
+                        Character.isDigit(temp.charAt(5))) {
                     // have three-digit wind speed
                     log.debug("MetarParser: have three-digit wind speed");
                     if (windInKnots) {
@@ -564,7 +554,7 @@ public class MetarParser {
                     index++;
                 }
                 // Horizontal visibility in meters
-           } else if (((String) tokens.get(index)).equals("9999")) {
+            } else if (((String) tokens.get(index)).equals("9999")) {
                 metar.setVisibilityInKilometers(new Float(10));
 
                 // on to the next token
@@ -579,10 +569,10 @@ public class MetarParser {
                 //     SM - statute miles
             } else if (((String) tokens.get(index)).endsWith("SM")
                     || ((index + 1 < numTokens) && ((String) tokens
-                            .get(index + 1)).endsWith("SM"))
+                    .get(index + 1)).endsWith("SM"))
                     || ((String) tokens.get(index)).endsWith("KM")
                     || ((index + 1 < numTokens) && ((String) tokens
-                            .get(index + 1)).endsWith("KM"))) {
+                    .get(index + 1)).endsWith("KM"))) {
                 log.debug("MetarParser: visibility");
 
                 String whole, fraction = "";
@@ -593,7 +583,7 @@ public class MetarParser {
 
                 if (((String) tokens.get(index)).endsWith("SM")
                         || ((index + 1 < numTokens) && ((String) tokens
-                                .get(index + 1)).endsWith("SM"))) {
+                        .get(index + 1)).endsWith("SM"))) {
                     visibilityInStatuteMiles = true;
                 }
 
@@ -658,18 +648,18 @@ public class MetarParser {
 
                 if (utility.match("/^M?\\d+(N|NE|E|SE|S|SW|W|NW)?$/", token)) {
                     log.debug("MetarParser: visibility");
-                    
+
                     if (token.startsWith("M")) {
                         log.debug("MetarParser: visibility: less than");
                         isLessThan = true;
                         token = token.substring(1, token.length());
                     }
-                    
+
                     // Catch case where a direction is attached. This is 
                     // done in some countries.
                     // TODO: For now we don't actually store the direction
-                    while(!Character.isDigit(token.charAt(token.length()-1))){
-                      token = token.substring(0,token.length()-1);
+                    while (!Character.isDigit(token.charAt(token.length() - 1))) {
+                        token = token.substring(0, token.length() - 1);
                     }
 
                     metar.setVisibilityInMeters(new Float(token));
@@ -724,7 +714,7 @@ public class MetarParser {
                         .get(index)).substring(1, 3)).intValue());
                 log.debug("MetarParser: RVR runway number: "
                         + new Integer(((String) tokens.get(index)).substring(1,
-                                3)));
+                        3)));
 
                 int pos = 3;
                 if (((String) tokens.get(index)).charAt(pos) != '/') {
@@ -740,20 +730,20 @@ public class MetarParser {
                 // determine if we have a modifier for above 6000ft or below
                 // 600ft
                 switch (((String) tokens.get(index)).charAt(pos)) {
-                case 'P': // below 600ft
-                case 'M': // above 6000ft
-                    runwayVisualRange.setReportableModifier(((String) tokens
-                            .get(index)).charAt(pos));
-                    log.debug("MetarParser: RVR modifier: "
-                            + ((String) tokens.get(index)).charAt(pos));
-                    pos++;
+                    case 'P': // below 600ft
+                    case 'M': // above 6000ft
+                        runwayVisualRange.setReportableModifier(((String) tokens
+                                .get(index)).charAt(pos));
+                        log.debug("MetarParser: RVR modifier: "
+                                + ((String) tokens.get(index)).charAt(pos));
+                        pos++;
                 }
                 runwayVisualRange.setLowestReportable(new Integer(
                         ((String) tokens.get(index)).substring(pos, pos + 4))
                         .intValue());
                 log.debug("MetarParser: RVR lowest reportable: "
                         + new Integer(((String) tokens.get(index)).substring(
-                                pos, pos + 4)));
+                        pos, pos + 4)));
                 pos += 4;
                 // if we are using the format with highest reportable
                 if (((String) tokens.get(index)).charAt(pos) == 'V') {
@@ -763,7 +753,7 @@ public class MetarParser {
                                     .substring(pos, pos + 4)).intValue());
                     log.debug("MetarParser: RVR highest reportable: "
                             + new Integer(((String) tokens.get(index))
-                                    .substring(pos, pos + 4)));
+                            .substring(pos, pos + 4)));
                 }
 
                 // on to the next token
@@ -802,69 +792,69 @@ public class MetarParser {
             while (((String) tokens.get(index))
                     .startsWith(MetarConstants.METAR_HEAVY)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_LIGHT)
+                    .startsWith(MetarConstants.METAR_LIGHT)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SHALLOW)
+                    .startsWith(MetarConstants.METAR_SHALLOW)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_PARTIAL)
+                    .startsWith(MetarConstants.METAR_PARTIAL)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_PATCHES)
+                    .startsWith(MetarConstants.METAR_PATCHES)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_LOW_DRIFTING)
+                    .startsWith(MetarConstants.METAR_LOW_DRIFTING)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_BLOWING)
+                    .startsWith(MetarConstants.METAR_BLOWING)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SHOWERS)
+                    .startsWith(MetarConstants.METAR_SHOWERS)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_THUNDERSTORMS)
+                    .startsWith(MetarConstants.METAR_THUNDERSTORMS)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_FREEZING)
+                    .startsWith(MetarConstants.METAR_FREEZING)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_DRIZZLE)
+                    .startsWith(MetarConstants.METAR_DRIZZLE)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_RAIN)
+                    .startsWith(MetarConstants.METAR_RAIN)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SNOW)
+                    .startsWith(MetarConstants.METAR_SNOW)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SNOW_GRAINS)
+                    .startsWith(MetarConstants.METAR_SNOW_GRAINS)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_ICE_CRYSTALS)
+                    .startsWith(MetarConstants.METAR_ICE_CRYSTALS)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_ICE_PELLETS)
+                    .startsWith(MetarConstants.METAR_ICE_PELLETS)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_HAIL)
+                    .startsWith(MetarConstants.METAR_HAIL)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SMALL_HAIL)
+                    .startsWith(MetarConstants.METAR_SMALL_HAIL)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_UNKNOWN_PRECIPITATION)
+                    .startsWith(MetarConstants.METAR_UNKNOWN_PRECIPITATION)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_MIST)
+                    .startsWith(MetarConstants.METAR_MIST)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_FOG)
+                    .startsWith(MetarConstants.METAR_FOG)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SMOKE)
+                    .startsWith(MetarConstants.METAR_SMOKE)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_VOLCANIC_ASH)
+                    .startsWith(MetarConstants.METAR_VOLCANIC_ASH)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_WIDESPREAD_DUST)
+                    .startsWith(MetarConstants.METAR_WIDESPREAD_DUST)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SAND)
+                    .startsWith(MetarConstants.METAR_SAND)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_HAZE)
+                    .startsWith(MetarConstants.METAR_HAZE)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SPRAY)
+                    .startsWith(MetarConstants.METAR_SPRAY)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_DUST_SAND_WHIRLS)
+                    .startsWith(MetarConstants.METAR_DUST_SAND_WHIRLS)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SQUALLS)
+                    .startsWith(MetarConstants.METAR_SQUALLS)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_FUNNEL_CLOUD)
+                    .startsWith(MetarConstants.METAR_FUNNEL_CLOUD)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SAND_STORM)
+                    .startsWith(MetarConstants.METAR_SAND_STORM)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_DUST_STORM)
+                    .startsWith(MetarConstants.METAR_DUST_STORM)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_NO_SIGNIFICANT_CHANGE)) {
+                    .startsWith(MetarConstants.METAR_NO_SIGNIFICANT_CHANGE)) {
                 log.debug("MetarParser: found weather groups");
 
                 int pos = 0;
@@ -875,7 +865,7 @@ public class MetarParser {
                 if (((String) tokens.get(index))
                         .startsWith(MetarConstants.METAR_HEAVY)
                         || ((String) tokens.get(index))
-                                .startsWith(MetarConstants.METAR_LIGHT)) {
+                        .startsWith(MetarConstants.METAR_LIGHT)) {
                     weatherCondition.setIntensity(String
                             .valueOf(((String) tokens.get(index)).charAt(0)));
                     log.debug("MetarParser: weather group: intensity: "
@@ -890,24 +880,24 @@ public class MetarParser {
                 if (((String) tokens.get(index)).substring(pos, pos + 2)
                         .startsWith(MetarConstants.METAR_SHALLOW)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .startsWith(MetarConstants.METAR_PARTIAL)
+                        .startsWith(MetarConstants.METAR_PARTIAL)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .startsWith(MetarConstants.METAR_PATCHES)
+                        .startsWith(MetarConstants.METAR_PATCHES)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .startsWith(MetarConstants.METAR_LOW_DRIFTING)
+                        .startsWith(MetarConstants.METAR_LOW_DRIFTING)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .startsWith(MetarConstants.METAR_BLOWING)
+                        .startsWith(MetarConstants.METAR_BLOWING)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .startsWith(MetarConstants.METAR_SHOWERS)
+                        .startsWith(MetarConstants.METAR_SHOWERS)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .startsWith(MetarConstants.METAR_THUNDERSTORMS)
+                        .startsWith(MetarConstants.METAR_THUNDERSTORMS)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .startsWith(MetarConstants.METAR_FREEZING)) {
+                        .startsWith(MetarConstants.METAR_FREEZING)) {
                     weatherCondition.setDescriptor(((String) tokens.get(index))
                             .substring(pos, pos + 2));
                     log.debug("MetarParser: weather group: descriptor: "
                             + ((String) tokens.get(index)).substring(pos,
-                                    pos + 2));
+                            pos + 2));
                     pos += 2;
                 } else {
                     log
@@ -918,54 +908,54 @@ public class MetarParser {
                 if (((String) tokens.get(index)).substring(pos, pos + 2)
                         .equals(MetarConstants.METAR_DRIZZLE)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_RAIN)
+                        .equals(MetarConstants.METAR_RAIN)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SNOW)
+                        .equals(MetarConstants.METAR_SNOW)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SNOW_GRAINS)
+                        .equals(MetarConstants.METAR_SNOW_GRAINS)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_ICE_CRYSTALS)
+                        .equals(MetarConstants.METAR_ICE_CRYSTALS)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_ICE_PELLETS)
+                        .equals(MetarConstants.METAR_ICE_PELLETS)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_HAIL)
+                        .equals(MetarConstants.METAR_HAIL)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SMALL_HAIL)
+                        .equals(MetarConstants.METAR_SMALL_HAIL)
                         || ((String) tokens.get(index))
-                                .substring(pos, pos + 2)
-                                .equals(
-                                        MetarConstants.METAR_UNKNOWN_PRECIPITATION)
+                        .substring(pos, pos + 2)
+                        .equals(
+                                MetarConstants.METAR_UNKNOWN_PRECIPITATION)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_MIST)
+                        .equals(MetarConstants.METAR_MIST)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_FOG)
+                        .equals(MetarConstants.METAR_FOG)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SMOKE)
+                        .equals(MetarConstants.METAR_SMOKE)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_VOLCANIC_ASH)
+                        .equals(MetarConstants.METAR_VOLCANIC_ASH)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_WIDESPREAD_DUST)
+                        .equals(MetarConstants.METAR_WIDESPREAD_DUST)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SAND)
+                        .equals(MetarConstants.METAR_SAND)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_HAZE)
+                        .equals(MetarConstants.METAR_HAZE)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SPRAY)
+                        .equals(MetarConstants.METAR_SPRAY)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_DUST_SAND_WHIRLS)
+                        .equals(MetarConstants.METAR_DUST_SAND_WHIRLS)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SQUALLS)
+                        .equals(MetarConstants.METAR_SQUALLS)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_FUNNEL_CLOUD)
+                        .equals(MetarConstants.METAR_FUNNEL_CLOUD)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_SAND_STORM)
+                        .equals(MetarConstants.METAR_SAND_STORM)
                         || ((String) tokens.get(index)).substring(pos, pos + 2)
-                                .equals(MetarConstants.METAR_DUST_STORM)) {
+                        .equals(MetarConstants.METAR_DUST_STORM)) {
                     weatherCondition.setPhenomena(((String) tokens.get(index))
                             .substring(pos, pos + 2));
                     log.debug("MetarParser: weather group: phenomena: "
                             + ((String) tokens.get(index)).substring(pos,
-                                    pos + 2));
+                            pos + 2));
                     metar.addWeatherCondition(weatherCondition);
                     log.debug("MetarParser: "
                             + weatherCondition.getNaturalLanguageString());
@@ -992,19 +982,19 @@ public class MetarParser {
             while (((String) tokens.get(index))
                     .startsWith(MetarConstants.METAR_VERTICAL_VISIBILITY)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SKY_CLEAR)
+                    .startsWith(MetarConstants.METAR_SKY_CLEAR)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_CLEAR)
+                    .startsWith(MetarConstants.METAR_CLEAR)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_FEW)
+                    .startsWith(MetarConstants.METAR_FEW)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_SCATTERED)
+                    .startsWith(MetarConstants.METAR_SCATTERED)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_BROKEN)
+                    .startsWith(MetarConstants.METAR_BROKEN)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_OVERCAST)
+                    .startsWith(MetarConstants.METAR_OVERCAST)
                     || ((String) tokens.get(index))
-                            .startsWith(MetarConstants.METAR_NO_SIGNIFICANT_CLOUDS)) {
+                    .startsWith(MetarConstants.METAR_NO_SIGNIFICANT_CLOUDS)) {
                 log.debug("MetarParser: found sky conditions");
 
                 // we have a sky condition
@@ -1013,11 +1003,11 @@ public class MetarParser {
                 if (((String) tokens.get(index))
                         .startsWith(MetarConstants.METAR_FEW)
                         || ((String) tokens.get(index))
-                                .startsWith(MetarConstants.METAR_SCATTERED)
+                        .startsWith(MetarConstants.METAR_SCATTERED)
                         || ((String) tokens.get(index))
-                                .startsWith(MetarConstants.METAR_BROKEN)
+                        .startsWith(MetarConstants.METAR_BROKEN)
                         || ((String) tokens.get(index))
-                                .startsWith(MetarConstants.METAR_OVERCAST)) {
+                        .startsWith(MetarConstants.METAR_OVERCAST)) {
                     skyCondition.setContraction(((String) tokens.get(index))
                             .substring(0, 3));
                     log.debug("MetarParser: sky condition: contraction: "
@@ -1033,12 +1023,12 @@ public class MetarParser {
                                         .length()));
                         log.debug("MetarParser: sky condition: modifier: "
                                 + ((String) tokens.get(index)).substring(6,
-                                        ((String) tokens.get(index)).length()));
+                                ((String) tokens.get(index)).length()));
                     }
                 } else if (((String) tokens.get(index))
                         .startsWith(MetarConstants.METAR_SKY_CLEAR)
                         || ((String) tokens.get(index))
-                                .startsWith(MetarConstants.METAR_CLEAR)) {
+                        .startsWith(MetarConstants.METAR_CLEAR)) {
                     skyCondition.setContraction(((String) tokens.get(index))
                             .substring(0, 3));
                     log.debug("MetarParser: sky condition: clear: "
@@ -1060,7 +1050,7 @@ public class MetarParser {
                     log
                             .debug("MetarParser: sky condition: No Significant Clouds: "
                                     + ((String) tokens.get(index)).substring(0,
-                                            3));
+                                    3));
                 } else {
                     log
                             .debug("MetarParser: sky condition: couldn't determine which");
@@ -1103,12 +1093,11 @@ public class MetarParser {
 
                 // we have a sub-zero temperature
                 Float temperature = null;
-                
+
                 // Temperature is missing from report
-                if( temps.size() == 0 || ((String)temps.get(0)).length() == 0){
+                if (temps.size() == 0 || ((String) temps.get(0)).length() == 0) {
                     metar.setTemperature(null);
-                }
-                else if (((String) temps.get(0)).startsWith("M")) {
+                } else if (((String) temps.get(0)).startsWith("M")) {
                     temperature = new Float(((String) temps.get(0)).substring(
                             1, 3));
                     temperature = new Float(temperature.floatValue()
@@ -1119,18 +1108,17 @@ public class MetarParser {
                     metar.setTemperature(temperature);
                 }
 
-                if(temperature != null)
-                  log.debug("MetarParser: temperature: " + temperature + " C, "
+                if (temperature != null)
+                    log.debug("MetarParser: temperature: " + temperature + " C, "
                             + (temperature.floatValue() * 9 / 5 + 32) + " F");
 
                 // Investigate dewpoint
                 Float dewPoint = null;
-                
+
                 // DewPoint is missing from report
-                if(temps.size() < 2 || ((String)temps.get(1)).length() == 0){
+                if (temps.size() < 2 || ((String) temps.get(1)).length() == 0) {
                     metar.setDewPoint(null);
-                }
-                else if (((String) temps.get(1)).startsWith("M")) {
+                } else if (((String) temps.get(1)).startsWith("M")) {
                     dewPoint = new Float(((String) temps.get(1))
                             .substring(1, 3));
                     dewPoint = new Float(dewPoint.floatValue()
@@ -1141,8 +1129,8 @@ public class MetarParser {
                     metar.setDewPoint(dewPoint);
                 }
 
-                if(dewPoint != null)
-                  log.debug("MetarParser: dew point: " + dewPoint + " C, "
+                if (dewPoint != null)
+                    log.debug("MetarParser: dew point: " + dewPoint + " C, "
                             + (dewPoint.floatValue() * 9 / 5 + 32) + " F");
 
                 // on to the next token
@@ -1180,16 +1168,16 @@ public class MetarParser {
                 if (index < numTokens - 1) {
                     index++;
                 }
-            } 
-	    // Alternative pressure (HPa/mB) (HectoPascal/Millbar)
-	    // QPPPP - QNH
+            }
+            // Alternative pressure (HPa/mB) (HectoPascal/Millbar)
+            // QPPPP - QNH
             // Format: "QPPPP" -> Q - indicator for QNH, PPPP - Pressure value.
             // Measured in hecto Pascal (HPa), 1 Hpa = 1 mB(millibar) 
-	    else if(((String) tokens.get(index)).startsWith("Q")){
+            else if (((String) tokens.get(index)).startsWith("Q")) {
                 Float pressure = new Float(((String) tokens.get(index))
-			       .substring(1, 5));
+                        .substring(1, 5));
 
-                log.debug("MetarParser: pressure: " + pressure + " hPa"); 
+                log.debug("MetarParser: pressure: " + pressure + " hPa");
 
                 // Convert to inHg
                 pressure = new Float(pressure.floatValue() * .02953F);
@@ -1202,9 +1190,8 @@ public class MetarParser {
                 if (index < numTokens - 1) {
                     index++;
                 }
-              
-            }
-	    else {
+
+            } else {
                 log.debug("MetarParser: pressure not found");
             }
 
@@ -1220,7 +1207,7 @@ public class MetarParser {
                 log.debug("MetarParser: we have remarks");
                 index++;
             }
-            
+
             // --------------------------------------------------------------- 
             // "BECMG" Section
             // Desc: Some non-NOAA reports use the identifier "BECMG" as a
@@ -1237,25 +1224,25 @@ public class MetarParser {
             // TODO: Determine method for safely parsing the BECMG section. It
             //       seems to be too freeform to do it?
             // ---------------------------------------------------------------
-            if(index < numTokens &&
-              MetarConstants.METAR_BECOMING.equalsIgnoreCase((String) tokens.get(index))){
-              StringBuffer sb = new StringBuffer();
-                
-              log.debug("MetarParser: processing \"BECMG\" section");
-              // BECMG seems to be consistently terminated by a remark
-              while(index < numTokens &&
-                    !MetarConstants.METAR_REMARKS
-                      .equalsIgnoreCase((String)tokens.get(index))) {
-                
-                if(sb.length() > 0) sb.append(" ");
-                  
-                log.debug("MetarParser: processing ((String)tokens.get("
-                          + index + "))=" + ((String) tokens.get(index)));
-                sb.append((String) tokens.get(index));
-                ++index;
-              }
-              
-              metar.setBecoming(sb.toString());
+            if (index < numTokens &&
+                    MetarConstants.METAR_BECOMING.equalsIgnoreCase((String) tokens.get(index))) {
+                StringBuffer sb = new StringBuffer();
+
+                log.debug("MetarParser: processing \"BECMG\" section");
+                // BECMG seems to be consistently terminated by a remark
+                while (index < numTokens &&
+                        !MetarConstants.METAR_REMARKS
+                                .equalsIgnoreCase((String) tokens.get(index))) {
+
+                    if (sb.length() > 0) sb.append(" ");
+
+                    log.debug("MetarParser: processing ((String)tokens.get("
+                            + index + "))=" + ((String) tokens.get(index)));
+                    sb.append((String) tokens.get(index));
+                    ++index;
+                }
+
+                metar.setBecoming(sb.toString());
             }
 
             // remarks
@@ -1358,19 +1345,19 @@ public class MetarParser {
                     } else if (((String) tokens.get(index))
                             .equals(MetarConstants.METAR_MIST)
                             || ((String) tokens.get(index))
-                                    .equals(MetarConstants.METAR_FOG)
+                            .equals(MetarConstants.METAR_FOG)
                             || ((String) tokens.get(index))
-                                    .equals(MetarConstants.METAR_SMOKE)
+                            .equals(MetarConstants.METAR_SMOKE)
                             || ((String) tokens.get(index))
-                                    .equals(MetarConstants.METAR_VOLCANIC_ASH)
+                            .equals(MetarConstants.METAR_VOLCANIC_ASH)
                             || ((String) tokens.get(index))
-                                    .equals(MetarConstants.METAR_WIDESPREAD_DUST)
+                            .equals(MetarConstants.METAR_WIDESPREAD_DUST)
                             || ((String) tokens.get(index))
-                                    .equals(MetarConstants.METAR_SAND)
+                            .equals(MetarConstants.METAR_SAND)
                             || ((String) tokens.get(index))
-                                    .equals(MetarConstants.METAR_HAZE)
+                            .equals(MetarConstants.METAR_HAZE)
                             || ((String) tokens.get(index))
-                                    .equals(MetarConstants.METAR_SPRAY)) {
+                            .equals(MetarConstants.METAR_SPRAY)) {
                         // we have an obscuration
                         Obscuration obscuration = new Obscuration();
                         obscuration.setPhenomena(((String) tokens.get(index)));
@@ -1384,11 +1371,11 @@ public class MetarParser {
                         if (((String) tokens.get(index))
                                 .startsWith(MetarConstants.METAR_FEW)
                                 || ((String) tokens.get(index))
-                                        .startsWith(MetarConstants.METAR_SCATTERED)
+                                .startsWith(MetarConstants.METAR_SCATTERED)
                                 || ((String) tokens.get(index))
-                                        .startsWith(MetarConstants.METAR_BROKEN)
+                                .startsWith(MetarConstants.METAR_BROKEN)
                                 || ((String) tokens.get(index))
-                                        .startsWith(MetarConstants.METAR_OVERCAST)) {
+                                .startsWith(MetarConstants.METAR_OVERCAST)) {
                             obscuration.setContraction(((String) tokens
                                     .get(index)).substring(0, 3));
                             obscuration.setHeight(new Integer(((String) tokens
