@@ -20,27 +20,27 @@ For more information, please email arimus@users.sourceforge.net
 */
 package net.sf.jweather;
 
-import net.sf.jweather.metar.*;
+import net.sf.jweather.metar.Metar;
 
 public class Test {
-	static String station = "KLAX";
-	static Weather weather = null;
-	static Metar metar = null;
+    static String station = "KLAX";
+    static Weather weather = null;
+    static Metar metar = null;
 
-	public static void main(String[] args) {
-		if ((args.length > 0) && (args[0].length() == 4)) {
-			station = args[0];
-			metar = Weather.getMetar(station);
-		} else if (args.length > 0) {
-			System.out.println("please specify a valid station code (e.g. KCNO)");
-		} else {
-			metar = weather.getMetar(station, 5000);
-		}
+    public static void main(String[] args) {
+        if ((args.length > 0) && (args[0].length() == 4)) {
+            station = args[0];
+            metar = Weather.getMetar(station);
+        } else if (args.length > 0) {
+            System.out.println("please specify a valid station code (e.g. KCNO)");
+        } else {
+            metar = weather.getMetar(station, 5000);
+        }
 
-		if (metar != null) {
-			metar.print();
-		} else {
-			System.out.println("could not retrieve station data for '"+station+"'");
-		}
-	}
+        if (metar != null) {
+            metar.print();
+        } else {
+            System.out.println("could not retrieve station data for '" + station + "'");
+        }
+    }
 }

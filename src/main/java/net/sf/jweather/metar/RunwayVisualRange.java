@@ -23,142 +23,131 @@ package net.sf.jweather.metar;
 /**
  * Represents a single Runway Visual Range (RVR) element that appears in a METAR
  * report
+ *
  * @author David Castro, dcastro@apu.edu
  * @version $Revision: 1.3 $
  */
 public class RunwayVisualRange {
-	int runwayNumber = 0;			// runway number
-	char approachDirection = ' ';	// L/R/C
-	char reportableModifier = ' ';	// P - below, M - above
-  String decodedReportableModifier = null;
-	int lowestReportable = 0;		// (ft)
-	int highestReportable = 0;		// (ft)
+    int runwayNumber = 0;            // runway number
+    char approachDirection = ' ';    // L/R/C
+    char reportableModifier = ' ';    // P - below, M - above
+    String decodedReportableModifier = null;
+    int lowestReportable = 0;        // (ft)
+    int highestReportable = 0;        // (ft)
 
-	public RunwayVisualRange() {
-	}
-
-    /**
-     *
-     * @param runwayNumber the part of a METAR RVR token which represents a
-     * runway number
-     */
-	protected void setRunwayNumber(int runwayNumber) {
-		this.runwayNumber = runwayNumber;
-	}
+    public RunwayVisualRange() {
+    }
 
     /**
-     *
-     * @param direction the part of a METAR RVR token which represents an
-     * approach direction (e.g. 'L', 'R')
-     */
-	protected void setApproachDirection(char direction) {
-		this.approachDirection = direction;
-	}
-
-    /**
-     *
-     * @param modifier the part of a METAR RVR token which represents a
-     * modifier used to specify if the visual range is above or below the
-     * following value
-     */
-	protected void setReportableModifier(char modifier) {
-		this.reportableModifier = modifier;
-    
-    if (MetarConstants.METAR_REPORTABLE_ABOVE == modifier)
-      decodedReportableModifier = MetarConstants.METAR_DECODED_REPORTABLE_ABOVE;
-    else if (MetarConstants.METAR_REPORTABLE_BELOW == modifier)
-      decodedReportableModifier = MetarConstants.METAR_DECODED_REPORTABLE_BELOW;
-	}
-
-    /**
-     *
-	 * @param lowestReportable the part of a METAR RVR token which represents
-	 * the lowest reportable value for visual range
-     */
-	protected void setLowestReportable(int lowestReportable) {
-		this.lowestReportable = lowestReportable;
-	}
-
-    /**
-     *
-	 * @param highestReportable the part of a METAR RVR token which represents
-	 * the highest reportable value for visual range
-     */
-	protected void setHighestReportable(int highestReportable) {
-		this.highestReportable = highestReportable;
-	}
-
-    /**
-     *
      * @return a string that represents the runway visual range in natural language
      */
-	public String getNaturalLanguageString() {
-		String temp = new Integer(runwayNumber).toString();
+    public String getNaturalLanguageString() {
+        String temp = new Integer(runwayNumber).toString();
 
-		temp += approachDirection;
+        temp += approachDirection;
 
-		if (reportableModifier == 'M') {
-			temp += " less than";
-		} else if (reportableModifier == 'P') {
-			temp += " greater than";
-		}
+        if (reportableModifier == 'M') {
+            temp += " less than";
+        } else if (reportableModifier == 'P') {
+            temp += " greater than";
+        }
 
-		if (highestReportable > 0) {
-			temp += " " + new Integer(lowestReportable);
-			temp += " to " + new Integer(highestReportable) + "feet.";
-		} else {
-			temp += " " + new Integer(lowestReportable) + "feet.";
-		}
+        if (highestReportable > 0) {
+            temp += " " + new Integer(lowestReportable);
+            temp += " to " + new Integer(highestReportable) + "feet.";
+        } else {
+            temp += " " + new Integer(lowestReportable) + "feet.";
+        }
 
-		return temp;
-	}
-  
-  /**
-   * 
-   * @return
-   */
-  public char getApproachDirection() {
-    return approachDirection;
-  }
+        return temp;
+    }
 
-  /**
-   * 
-   * @return
-   */
-  public int getHighestReportable() {
-    return highestReportable;
-  }
+    /**
+     * @return
+     */
+    public char getApproachDirection() {
+        return approachDirection;
+    }
 
-  /**
-   * 
-   * @return
-   */
-  public int getLowestReportable() {
-    return lowestReportable;
-  }
+    /**
+     * @param direction the part of a METAR RVR token which represents an
+     *                  approach direction (e.g. 'L', 'R')
+     */
+    protected void setApproachDirection(char direction) {
+        this.approachDirection = direction;
+    }
 
-  /**
-   * 
-   * @return
-   */
-  public char getReportableModifier() {
-    return reportableModifier;
-  }
+    /**
+     * @return
+     */
+    public int getHighestReportable() {
+        return highestReportable;
+    }
 
-  /**
-   * 
-   * @return
-   */
-  public int getRunwayNumber() {
-    return runwayNumber;
-  }
+    /**
+     * @param highestReportable the part of a METAR RVR token which represents
+     *                          the highest reportable value for visual range
+     */
+    protected void setHighestReportable(int highestReportable) {
+        this.highestReportable = highestReportable;
+    }
 
-  /**
-   * 
-   * @return
-   */
-  public String getDecodedReportableModifier() {
-    return decodedReportableModifier;
-  }
+    /**
+     * @return
+     */
+    public int getLowestReportable() {
+        return lowestReportable;
+    }
+
+    /**
+     * @param lowestReportable the part of a METAR RVR token which represents
+     *                         the lowest reportable value for visual range
+     */
+    protected void setLowestReportable(int lowestReportable) {
+        this.lowestReportable = lowestReportable;
+    }
+
+    /**
+     * @return
+     */
+    public char getReportableModifier() {
+        return reportableModifier;
+    }
+
+    /**
+     * @param modifier the part of a METAR RVR token which represents a
+     *                 modifier used to specify if the visual range is above or below the
+     *                 following value
+     */
+    protected void setReportableModifier(char modifier) {
+        this.reportableModifier = modifier;
+
+        if (MetarConstants.METAR_REPORTABLE_ABOVE == modifier)
+            decodedReportableModifier = MetarConstants.METAR_DECODED_REPORTABLE_ABOVE;
+        else if (MetarConstants.METAR_REPORTABLE_BELOW == modifier)
+            decodedReportableModifier = MetarConstants.METAR_DECODED_REPORTABLE_BELOW;
+    }
+
+    /**
+     * @return
+     */
+    public int getRunwayNumber() {
+        return runwayNumber;
+    }
+
+    /**
+     * @param runwayNumber the part of a METAR RVR token which represents a
+     *                     runway number
+     */
+    protected void setRunwayNumber(int runwayNumber) {
+        this.runwayNumber = runwayNumber;
+    }
+
+    /**
+     * @return
+     */
+    public String getDecodedReportableModifier() {
+        return decodedReportableModifier;
+    }
 
 }
